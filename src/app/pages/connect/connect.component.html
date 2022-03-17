@@ -1,0 +1,176 @@
+<div class="main" fxLayout="row" fxLayout.xs="column" fxLayoutAlign="space-between top" fxLayoutGap="20px">
+    <div fxFlex="25">
+        <h2>Recent Endpoints</h2>
+        <div *ngIf="endpoints.length" style="max-height: 25rem; overflow-y: auto; padding-right: 1rem;">
+            <mat-card *ngFor="let endpoint of endpoints">
+                <span title="Endpoint Secret - {{endpoint.endpoint_secret}}"><strong>{{endpoint.description}}</strong> |
+                    {{endpoint.endpoint_public}}</span>
+                <div class="icon">
+                    <button *ngIf="!is_connected(endpoint.endpoint_secret);"
+                        (click)="connect(endpoint.endpoint_secret, endpoint.endpoint_public)"
+                        title="Connect to Endpoint">
+                        <mat-icon style="color: #16a085;" aria-hidden="false" aria-label="Connect">link</mat-icon>
+                    </button>
+                    <button *ngIf="is_connected(endpoint.endpoint_secret);"
+                        (click)="disconnect(endpoint.endpoint_secret, endpoint.endpoint_public)"
+                        title="Disconnect from Endpoint">
+                        <mat-icon style="color: #f39c12;" aria-hidden="false" aria-label="Connect">link_off</mat-icon>
+                    </button>
+                    &nbsp;&nbsp;
+                    <button (click)="delete(endpoint.endpoint_secret)" title="Connect to Endpoint">
+                        <mat-icon style="color: #e74c3c;" aria-hidden="false" aria-label="delete">delete</mat-icon>
+                    </button>
+                </div>
+            </mat-card>
+        </div>
+
+        <mat-divider></mat-divider>
+        <h2>Add New Endpoint</h2>
+        <div fxLayout="row" fxLayoutAlign="space-between center" fxLayoutGap="10px" style="margin: 10px;">
+            <div fxFlex="80">
+                <mat-form-field class="field-full-width">
+                    <mat-label>Endpoint Description *</mat-label>
+                    <input name="ep_name" type="text" matInput placeholder="Enter Endpoint Title" [(ngModel)]="ep_name">
+                </mat-form-field>
+                <div fxLayout="row" fxLayoutAlign="space-between center" fxLayoutGap="10px">
+                    <div fxFlex="70">
+                        <mat-form-field class="field-full-width">
+                            <mat-label>Endpoint Secret *</mat-label>
+                            <input name="ep_description" type="text" matInput placeholder="Enter Secret"
+                                [(ngModel)]="ep_description">
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex="30">
+                        <mat-form-field class="field-full-width">
+                            <mat-label>Initial Value</mat-label>
+                            <input name="ep_value" type="text" matInput placeholder="(Optional)" [(ngModel)]="ep_value">
+                        </mat-form-field>
+                    </div>
+                </div>
+            </div>
+            <div fxFlex="20">
+                <button mat-raised-button color="primary" title="Add Endpoint" (click)="add();"
+                    [disabled]="!(ep_name && ep_description)">+ Add</button>
+            </div>
+        </div>
+        <br *ngIf="ep_message" />
+        <p *ngIf="ep_message">{{ep_message}}</p>
+        <p *ngIf="my_ep_secret">Endpoint Created - {{my_ep_secret}}</p>
+
+        <mat-divider></mat-divider>
+        <h3 style="font-weight: 500;">Socket Status - <span *ngIf="socket_status"
+                style="color: teal;">Connected</span><span *ngIf="!socket_status"
+                style="color: maroon;">Disonnected</span></h3>
+
+        <p>
+            Socket.IO Version : <span style="font-weight: 500; color: orange;">^4.4.0</span>
+            <br />
+            Build Version : <span style="font-weight: 500; color: maroon;">{{build_number}}</span>
+        </p>
+        
+        <mat-divider></mat-divider>
+        
+        <p>
+            <mat-slide-toggle [(ngModel)]="deviceOnly">Device-Only Mode (Works with MWV IoT)</mat-slide-toggle>
+        </p>
+    </div>
+    <div fxFlex="75">
+        <h2>Connected Endpoints</h2>
+        <div fxLayout="row wrap" fxLayout.xs="column" fxLayoutAlign="space-between top" style="margin: 10px;">
+            <div *ngFor="let endpoint of connected_endpoints; let i = index" fxFlex="49">
+                <mat-card>
+                    <mat-card-header>
+                        <mat-card-title>{{i+1}}. {{endpoint.name}}</mat-card-title>
+                        <mat-card-subtitle>{{endpoint.endpoint}}</mat-card-subtitle>
+                    </mat-card-header>
+                    <mat-card-content>
+
+                        <div fxLayout="row" fxLayout.xs="column" fxLayout.md="column" *ngIf="deviceOnly"
+                            fxLayoutAlign="space-between center" fxLayoutGap="20px" style="padding: 15px;"
+                            class="my-custom-fx">
+                            <div fxFlex="70">
+                                <mat-form-field class="full-width">
+                                    <mat-label>Chip ID (optional)</mat-label>
+                                    <input type="text" matInput placeholder="Enter Device ID"
+                                        [(ngModel)]="endpoint.device_id">
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex="30">
+                                <mat-slide-toggle [(ngModel)]="endpoint.state">State (Optional)</mat-slide-toggle>
+                            </div>
+                        </div>
+                        <div fxLayout="row" fxLayout.xs="column" fxLayout.md="column"
+                            fxLayoutAlign="space-between center" fxLayoutGap="20px" style="padding: 15px;"
+                            class="my-custom-fx">
+                            <div fxFlex="35">
+                                <mat-form-field>
+                                    <mat-label>Value Type</mat-label>
+                                    <mat-select name="endpoint_type" ngDefaultControl [(ngModel)]="endpoint.type"
+                                        (selectionChange)="endpoint_change(endpoint)">
+                                        <mat-option *ngFor="let type of value_types" [value]="type.value">
+                                            {{type.viewValue}}
+                                        </mat-option>
+                                    </mat-select>
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex="65" [class.mobile-full]="endpoint.type === 'fixed_int'">
+                                <div *ngIf="endpoint.type === 'boolean'">
+                                    <mat-slide-toggle [(ngModel)]="endpoint.value">Value</mat-slide-toggle>
+                                </div>
+                                <div *ngIf="endpoint.type === 'number'">
+                                    <mat-form-field class="form-full-width">
+                                        <mat-label>Number</mat-label>
+                                        <input type="number" matInput placeholder="Enter a Number"
+                                            [(ngModel)]="endpoint.value">
+                                        <button mat-button *ngIf="endpoint.value" matSuffix mat-icon-button
+                                            aria-label="Clear" (click)="endpoint.value=0">
+                                            <mat-icon>close</mat-icon>
+                                        </button>
+                                    </mat-form-field>
+                                </div>
+                                <div *ngIf="endpoint.type === 'string'">
+                                    <mat-form-field class="full-width">
+                                        <mat-label>String</mat-label>
+                                        <input matInput placeholder="Enter a String" [(ngModel)]="endpoint.value">
+                                        <button mat-button *ngIf="endpoint.value" matSuffix mat-icon-button
+                                            aria-label="Clear" (click)="endpoint.value=''">
+                                            <mat-icon>close</mat-icon>
+                                        </button>
+                                    </mat-form-field>
+                                </div>
+                                <div *ngIf="endpoint.type === 'fixed_int'">
+                                    <mat-slider class="example-margin" max="1" min="0" step="0.01" thumbLabel="true"
+                                        [(ngModel)]="endpoint.value" (ngModelChange)="emitValue(endpoint);">
+                                    </mat-slider>
+                                </div>
+                            </div>
+                        </div>
+                    </mat-card-content>
+                    <mat-card-actions>
+                        <button (click)="emitValue(endpoint)" mat-button color="primary"
+                            matTooltip="Emit the value to endpoint">EMIT VALUE</button>
+                        <button (click)="unlink(endpoint.endpoint)" mat-button color="accent"
+                            matTooltip="Disconnect from the endpoint">DISCONNECT</button>
+                    </mat-card-actions>
+                </mat-card>
+            </div>
+        </div>
+
+        <mat-divider></mat-divider>
+        <h4 style="font-weight: 500;">Recent Transactions Log</h4>
+        <div *ngFor="let log of ( log_messages | slice:0:5 ); let i = index">{{log.message}}&nbsp;
+            <b class="endpoint" *ngIf="log.endpoint">XXXX-{{log.endpoint.substr(log.endpoint.length - 8)}}</b>
+            <b class="endpoint" *ngIf="log.device">{{log.device}}</b>
+            &nbsp;&lt;- <b class="value">{{log.value}}</b> {{log.dt}}<br />
+        </div>
+        <!-- for each connected_eps -->
+    </div>
+</div>
+
+<div *ngIf="showDeleteDialog" class="modal--container modal-message">
+    <h2 class="text-center">Are you sure, you want to Delete the Endpoint?</h2>
+    <div class="modal--buttons">
+        <button mat-raised-button (click)="closeDeleteDialog()" color="primary">Cancel</button>
+        <button mat-raised-button (click)="deleteEndpoint()" color="warn">Delete</button>
+    </div>
+</div>

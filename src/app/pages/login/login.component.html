@@ -1,37 +1,85 @@
 <div class="form-wrapper">
-    <h4 class="title">Authorize Endpoint</h4>
+  <h4 class="title">Authorize Endpoint</h4>
 
+  <div class="login-form">
+    <mat-form-field class="login-full-width">
+      <mat-label>Base URL</mat-label>
+      <input
+        name="base_url"
+        type="text"
+        matInput
+        placeholder="Enter Base URL including (http:// or https://)"
+        [(ngModel)]="base_url"
+        (change)="epChanged()"
+      />
+    </mat-form-field>
 
-    <div class="login-form">
-        <mat-form-field class="login-full-width">
-            <mat-label>Base URL</mat-label>
-            <input name="base_url" type="text" matInput placeholder="Enter Base URL including (http:// or https://)" [(ngModel)]="base_url" (change)="epChanged();">
-        </mat-form-field>
+    <mat-slide-toggle
+      [(ngModel)]="sameSocketUrl"
+      style="margin-bottom: 1rem !important"
+      (change)="epChanged()"
+      >Socket URL same as Base URL</mat-slide-toggle
+    >
 
-        <mat-slide-toggle [(ngModel)]="sameSocketUrl" style="margin-bottom: 1rem !important;" (change)="epChanged();">Socket URL same as Base URL</mat-slide-toggle>
+    <mat-form-field class="login-full-width" *ngIf="!sameSocketUrl">
+      <mat-label>Socket URL</mat-label>
+      <input
+        name="base_url"
+        type="text"
+        matInput
+        placeholder="Enter Socket URL including (http:// or https://)"
+        [(ngModel)]="socket_url"
+        (change)="epChanged()"
+      />
+    </mat-form-field>
 
+    <mat-form-field class="login-full-width">
+      <mat-label>Email / Username</mat-label>
+      <input
+        name="email"
+        type="email"
+        matInput
+        placeholder="Your Email Address"
+        [(ngModel)]="email"
+        [disabled]="!endpointSet"
+      />
+    </mat-form-field>
 
-        <mat-form-field class="login-full-width" *ngIf="!sameSocketUrl">
-            <mat-label>Socket URL</mat-label>
-            <input name="base_url" type="text" matInput placeholder="Enter Socket URL including (http:// or https://)" [(ngModel)]="socket_url" (change)="epChanged();">
-        </mat-form-field>
+    <mat-form-field class="login-full-width">
+      <mat-label>Authentication Password</mat-label>
+      <input
+        name="password"
+        type="password"
+        matInput
+        placeholder="Enter Your Password"
+        [(ngModel)]="password"
+        [disabled]="!endpointSet"
+      />
+    </mat-form-field>
 
-        <mat-form-field class="login-full-width">
-            <mat-label>Email / Username</mat-label>
-            <input name="email" type="email" matInput placeholder="Your Email Address" [(ngModel)]="email" [disabled]="!endpointSet">
-        </mat-form-field>
-
-        <mat-form-field class="login-full-width">
-            <mat-label>Authentication Password</mat-label>
-            <input name="password" type="password" matInput placeholder="Enter Your Password" [(ngModel)]="password" [disabled]="!endpointSet">
-        </mat-form-field>
-
-        <div class="login-buttons">
-            <button mat-raised-button color="info" (click)="setEndpoint();"><span *ngIf="!endpointSet">Set</span><span *ngIf="endpointSet">Un-Set</span> API URL(s)</button>
-            &nbsp;&nbsp;&nbsp;
-            <button mat-raised-button color="primary" (click)="login();" [disabled]="!endpointSet">Login</button>
-            &nbsp;&nbsp;&nbsp;
-            <button mat-raised-button color="warn" (click)="reset();" [disabled]="!endpointSet">Reset</button>
-        </div>
+    <div class="login-buttons">
+      <button mat-raised-button color="info" (click)="setEndpoint()">
+        <span *ngIf="!endpointSet">Set</span
+        ><span *ngIf="endpointSet">Un-Set</span> API URL(s)
+      </button>
+      &nbsp;&nbsp;&nbsp;
+      <button
+        mat-raised-button
+        color="primary"
+        (click)="login()"
+        [disabled]="!endpointSet"
+      >
+        Login
+      </button>
+      &nbsp;&nbsp;&nbsp;
+      <button
+        mat-raised-button
+        color="warn"
+        (click)="reset()"
+        [disabled]="!endpointSet"
+      >
+        Reset
+      </button>
     </div>
+  </div>
 </div>

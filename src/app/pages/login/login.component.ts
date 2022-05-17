@@ -59,7 +59,7 @@ export class LoginComponent implements OnInit {
     this.auth.login(this.email, this.password, this.base_url).then((response: HttpResponse<any>) => {
       if (response.status === 200) {
         // console.log(response.body);
-        localStorage.setItem("token", response.body.token);
+        localStorage.setItem("token", response.body.result); //response changed according to illumino api
         this.router.navigate(['connect']);
       } else {
         localStorage.removeItem("token");
